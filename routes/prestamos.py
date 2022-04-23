@@ -1,6 +1,5 @@
 
-import json
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response, Blueprint
+from flask import request, jsonify, Response, Blueprint
 from bson import json_util
 import uuid
 from datetime import datetime, timedelta
@@ -41,46 +40,49 @@ def loan():
         id_book = request.json['id_book']
         id_user = request.json['id_user']
         #Verificar que existan en la base de datos
-        if mongo.db.users.find({"id_user":id_user}) and mongo.db.biblioteca.find({'id_book':id_book}):
-            #Traer el el usuario y libro
-            user = mongo.db.users.find_one({"id_user":id_user})
-            id_user = user['id_user']
-            user_display_name = user['user_display_name']
-            user_career = user['user_career']
-            user_carnet = user['user_carnet']
-            book = mongo.db.biblioteca.find_one({"id_book":id_book})
-            id_book = book['id_book']
-            book_title = book['book_title']
-            book_type = book['book_type']
-            author = book['author']
-            book_year = book['book_year']
-            book_editorial = book['book_editorial']
-            #Fechas
-            loan_date = datetime.now().strftime("%d/%m/%Y")
-            return_date = (datetime.now() + timedelta(days=7)).strftime("%d/%m/%Y")
-            id_loan = str(uuid.uuid4())
-            #Crear prestamo
-            mongo.db.prestamo.insert_one({
-                "id_loan": id_loan,
-                "id_book": id_book,
-                "book_title": book_title,
-                "book_type": book_type,
-                "author": author,
-                "book_year": book_year,
-                "book_editorial": book_editorial,
+        if id_book and id_user:
+            if mongo.db.users.find({"id_user":id_user}) or mongo.db.biblioteca.find({'id_book':id_book}):
+                #Traer el el usuario y libro
+                user = mongo.db.users.find_one({"id_user":id_user})
+                id_user = user['id_user']
+                user_display_name = user['user_display_name']
+                user_career = user['user_career']
+                user_carnet = user['user_carnet']
+                book = mongo.db.biblioteca.find_one({"id_book":id_book})
+                id_book = book['id_book']
+                book_title = book['book_title']
+                book_type = book['book_type']
+                author = book['author']
+                book_year = book['book_year']
+                book_editorial = book['book_editorial']
                 #Fechas
-                "loan_date": str(loan_date),
-                "return_date": str(return_date),
-                "id_user": id_user,
-                "user_display_name": user_display_name,
-                "user_career": user_career,
-                "user_carnet": user_carnet,
-            })
-            #Retornar prestamo
-            response = json_util.dumps(mongo.db.prestamo.find_one({"id_loan": id_loan }))
-            return Response(response, mimetype='application/json')
+                loan_date = datetime.now().strftime("%d/%m/%Y")
+                return_date = (datetime.now() + timedelta(days=7)).strftime("%d/%m/%Y")
+                id_loan = str(uuid.uuid4())
+                #Crear prestamo
+                mongo.db.prestamo.insert_one({
+                    "id_loan": id_loan,
+                    "id_book": id_book,
+                    "book_title": book_title,
+                    "book_type": book_type,
+                    "author": author,
+                    "book_year": book_year,
+                    "book_editorial": book_editorial,
+                    #Fechas
+                    "loan_date": str(loan_date),
+                    "return_date": str(return_date),
+                    "id_user": id_user,
+                    "user_display_name": user_display_name,
+                    "user_career": user_career,
+                    "user_carnet": user_carnet,
+                })
+                #Retornar prestamo
+                response = json_util.dumps(mongo.db.prestamo.find_one({"id_loan": id_loan }))
+                return Response(response, mimetype='application/json')
+            else:
+                return jsonify({"message":"No existe el usuario o libro"}),400
         else:
-            return jsonify({"message":"No existe el usuario o libro"}),400
+            return jsonify({"msg":'Datos insuficientes'})
             
             
         
@@ -113,12 +115,4 @@ def penalty():
                 return jsonify({"message":"Prestamo vigente"}),400
         else:
             return jsonify({"message":"No existe el prestamo"}),400
-
-
-
-
-
-
-
-
 #----------------------ENDPRESTAMOS---------------------------#

@@ -1,8 +1,7 @@
 #Imports
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response, Blueprint
+from flask import  request, jsonify, Response, Blueprint
 from bson import json_util
 from flask_pymongo import PyMongo
-from bson.objectid import ObjectId
 import app
 
 biblioteca=Blueprint("biblioteca",__name__)
@@ -76,24 +75,30 @@ def create_book():
     book_not_available = request.json["book_not_available"]
     book_year = request.json["book_year"]
     book_editorial = request.json["book_editorial"]
+
     #Verificar que el ID no este repetido
-    if mongo.db.biblioteca.find_one({"id_book":id_book}):
-        return jsonify({'msg': 'El id_book ya existe'}), 400
-    else:
-        mongo.db.biblioteca.insert_one({
-            "id_book": id_book,
-            "book_title": book_title,
-            "book_type": book_type,
-            "author": author,
-            "book_count": book_count,
-            "book_available": book_available,
-            "book_not_available": book_not_available,
-            "book_year": book_year,
-            "book_editorial": book_editorial
-        })
-    response = jsonify({"status": 200, "msg": "response"})
-    response.status_code = 200
-    return response
+    if id_book and book_title and book_type and author and book_count and book_available and book_year and book_editorial:
+        if mongo.db.biblioteca.find_one({"id_book":id_book}):
+            return jsonify({'msg': 'El id_book ya existe'}), 400
+        else:
+            mongo.db.biblioteca.insert_one({
+                "id_book": id_book,
+                "book_title": book_title,
+                "book_type": book_type,
+                "author": author,
+                "book_count": book_count,
+                "book_available": book_available,
+                "book_not_available": book_not_available,
+                "book_year": book_year,
+                "book_editorial": book_editorial
+            })
+        response = jsonify({"status": 200, "msg": "response"})
+        response.status_code = 200
+        return response
+    else: 
+        response = jsonify({"status": 400, "msg": "Datos insuficientes"})
+        response.status_code = 400
+        return response
 #Actualizar libro
 @biblioteca.route('/book',methods=['PUT'])
 def book_update():
@@ -110,6 +115,7 @@ def book_update():
     book_year = request.json["book_year"]
     book_editorial = request.json["book_editorial"]
     #Verificar que el ID exista
+    
     if mongo.db.biblioteca.find_one({'id_book':id_book}):
         mongo.db.biblioteca.update_one({'id_book':id_book},{
             '$set':{
@@ -129,3 +135,36 @@ def book_update():
     else: 
         return jsonify({'msg': 'El id_book no existe'}), 400
 # #--------------------ENDLIBRO--------------------------#  
+
+"""
+#Registrar un libro
+    {
+        "id_book":"asdf2",
+        "book_title":"Titulo del libro",
+        "book_type":"Tipo de libro",
+        "author":"USAC",
+        "book_count":140,
+        "book_available":20,
+        "book_not_available":2,
+        "book_year": 2021,
+        "book_editorial":"Universidad de San Carlos"
+    }
+#Actualizar un libro
+    {
+        "id_book":"asdf2",
+        "book_title":"Titulo del libro",
+        "book_type":"Tipo de libro",
+        "author":"USAC",
+        "book_count":140,
+        "book_available":20,
+        "book_not_available":2,
+        "book_year": 2021,
+        "book_editorial":"Universidad de San Carlos"
+    }
+"Buscar libro
+    {
+        "id_book":"asdf2",
+        "book_title":"Titulo del libro",
+        "book_type":"Tipo de libro",
+    }
+"""
