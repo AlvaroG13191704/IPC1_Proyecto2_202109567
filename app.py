@@ -6,6 +6,7 @@ from bson import json_util
 from routes.usuarios import usuario
 from routes.biblioteca import biblioteca
 from routes.prestamos import prestamo
+from routes.study import Study
 
 app = Flask(__name__)
 
@@ -13,6 +14,7 @@ app = Flask(__name__)
 app.register_blueprint(usuario)
 app.register_blueprint(biblioteca)
 app.register_blueprint(prestamo)
+app.register_blueprint(Study)
 
 #Base de datos
 app.config['MONGO_URI'] = 'mongodb://localhost:27017/proyecto2'
